@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "id": {
+      "type": "long"
+    },
+    "name": {
+      "type": "text",
+      "analyzer": "korean_analyzer",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "brand": {
+      "type": "text",
+      "analyzer": "korean_analyzer",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "category": {
+      "type": "keyword"
+    },
+    "price": {
+      "type": "long"
+    },
+    "salesCount": {
+      "type": "long"
+    },
+    "promoted": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd'T'HH:mm:ss||epoch_millis"
+    }
+  }
+}

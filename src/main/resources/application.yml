@@ -12,6 +12,9 @@ spring:
       minimum-idle: 5
       connection-timeout: 3000
 
+  elasticsearch:
+    uris: http://localhost:9200
+
   jpa:
     hibernate:
       ddl-auto: validate
