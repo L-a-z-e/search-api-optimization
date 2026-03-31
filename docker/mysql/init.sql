@@ -1,6 +1,8 @@
 CREATE DATABASE IF NOT EXISTS search_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE search_db;
 
+-- CDC를 위한 binlog 설정은 docker-compose command에서 처리
+
 CREATE TABLE product (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(500) NOT NULL,

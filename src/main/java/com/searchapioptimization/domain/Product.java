@@ -54,4 +54,15 @@ public class Product {
         this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
+
+    public void update(String name, String brand, String category,
+                       Long price, Long salesCount, Boolean promoted) {
+        this.name = name;
+        this.brand = brand;
+        this.category = category;
+        this.price = price;
+        this.salesCount = salesCount != null ? salesCount : this.salesCount;
+        this.promoted = promoted != null ? promoted : this.promoted;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

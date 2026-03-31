@@ -1,0 +1,25 @@
+{
+  "name": "es-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "connection.url": "http://elasticsearch:9200",
+    "topics": "search.search_db.product",
+    "key.ignore": "false",
+    "type.name": "_doc",
+    "behavior.on.null.values": "DELETE",
+    "write.method": "UPSERT",
+    "transforms": "extractKey,renameFields",
+    "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.extractKey.field": "id",
+    "transforms.renameFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+    "transforms.renameFields.renames": "sales_count:salesCount,created_at:createdAt,updated_at:updatedAt",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "schema.ignore": "true",
+    "max.buffered.records": "5000",
+    "batch.size": "1000",
+    "flush.timeout.ms": "10000"
+  }
+}
