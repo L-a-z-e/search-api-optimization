@@ -93,6 +93,40 @@ min 13.9ms로 단건은 빠르지만, 동시 요청 시 CPU 경합으로 급격�
 
 ---
 
+## Phase 3: CDC 데이터 동기화 (Debezium + Kafka)
+
+### 구성
+- Kafka 4.0.0 (KRaft, single node)
+- Debezium 3.0 (quay.io/debezium/connect:3.0)
+- MySQL Source Connector (binlog CDC, schema_only snapshot)
+- Spring Kafka Consumer → ES 동기화
+
+### CDC 동기화 지연 (INSERT → ES 반영)
+
+| Run | lag (ms) |
+|-----|----------|
+| 1 | 685 |
+| 2 | 677 |
+| 3 | 667 |
+| 4 | 665 |
+| 5 | 680 |
+| **평균** | **~675ms** |
+
+### 삭제 이벤트 동기화
+
+| 테스트 | MySQL 삭제 → ES 삭제 lag |
+|--------|------------------------|
+| delete-test | **1,024ms** |
+
+### 핵심 인사이트
+
+1. **CDC < 1초**: MySQL INSERT → Debezium binlog → Kafka → Spring Consumer → ES 반영까지 평균 675ms.
+2. **삭제 감지**: Debezium `__deleted` 필드로 tombstone 이벤트 처리. MySQL DELETE가 ES에 ~1초 후 반영.
+3. **DB 부하 최소**: binlog 읽기만 하므로 원본 MySQL에 추가 쿼리 부하 없음.
+4. **이중 쓰기 대비 장점**: 트랜잭션 불일치 불가능 (CDC는 커밋된 데이터만 캡처), 삭제 자동 감지.
+
+---
+
 ## Phase 비교표 (누적)
 
 | 지표 | Phase 1 LIKE | Phase 1 FULLTEXT | Phase 2 ES | 개선 (LIKE 대비) |
