@@ -42,6 +42,14 @@ public class SearchController {
         return elasticsearchService.search(q, page, size);
     }
 
+    @GetMapping("/es/ranked")
+    public SearchResponse searchByFunctionScore(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return elasticsearchService.searchWithFunctionScore(q, page, size);
+    }
+
     @GetMapping("/cached")
     public SearchResponse searchCached(
             @RequestParam String q,
