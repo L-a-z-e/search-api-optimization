@@ -39,6 +39,9 @@ dependencies {
     // Kafka Consumer (CDC → ES sync)
     implementation 'org.springframework.kafka:spring-kafka'
 
+    // Redis (autocomplete + cache)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
