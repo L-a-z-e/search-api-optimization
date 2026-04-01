@@ -1,5 +1,6 @@
 package com.searchapioptimization.controller;
 
+import com.searchapioptimization.cache.MultiLayerCacheService;
 import com.searchapioptimization.controller.dto.SearchResponse;
 import com.searchapioptimization.service.CachedSearchService;
 import com.searchapioptimization.service.ElasticsearchService;
@@ -17,6 +18,7 @@ public class SearchController {
     private final SearchService searchService;
     private final ElasticsearchService elasticsearchService;
     private final CachedSearchService cachedSearchService;
+    private final MultiLayerCacheService multiLayerCacheService;
 
     @GetMapping("/like")
     public SearchResponse searchByLike(
@@ -32,6 +34,14 @@ public class SearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return searchService.searchByFulltext(q, page, size);
+    }
+
+    @GetMapping("/fulltext/optimized")
+    public SearchResponse searchByFulltextOptimized(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return searchService.searchByFulltextOptimized(q, page, size);
     }
 
     @GetMapping("/es")
@@ -66,6 +76,26 @@ public class SearchController {
     @DeleteMapping("/cache")
     public Map<String, String> evictCache() {
         cachedSearchService.evictAll();
+        return Map.of("status", "evicted");
+    }
+
+    // L1+L2 멀티레이어 캐시
+    @GetMapping("/multilayer")
+    public SearchResponse searchMultiLayer(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return multiLayerCacheService.search(q, page, size);
+    }
+
+    @GetMapping("/multilayer/stats")
+    public MultiLayerCacheService.CacheStats multiLayerStats() {
+        return multiLayerCacheService.getStats();
+    }
+
+    @DeleteMapping("/multilayer/cache")
+    public Map<String, String> evictMultiLayerCache() {
+        multiLayerCacheService.evictAll();
         return Map.of("status", "evicted");
     }
 }

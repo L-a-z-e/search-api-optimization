@@ -50,8 +50,8 @@ public class ElasticsearchService {
                                 // 판매량 반영 (log1p)
                                 .functions(fn -> fn.fieldValueFactor(fvf -> fvf
                                         .field("salesCount")
-                                        .modifier(co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier.Log1p)
-                                        .factor(0.5)
+                                        .modifier(co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier.Log2p)
+                                        .factor(1.0)
                                 ))
                                 // 프로모션 상품 부스팅
                                 .functions(fn -> fn

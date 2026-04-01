@@ -1,9 +1,6 @@
 spring:
-  application:
-    name: search-api-optimization
-
   datasource:
-    url: jdbc:mysql://localhost:3308/search_db?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+    url: jdbc:mysql://mysql:3306/search_db?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&rewriteBatchedStatements=true
     username: root
     password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,15 +11,15 @@ spring:
       leak-detection-threshold: 0
 
   elasticsearch:
-    uris: http://localhost:9200
+    uris: http://elasticsearch:9200
 
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:29092
     consumer:
       group-id: search-es-sync
       auto-offset-reset: earliest

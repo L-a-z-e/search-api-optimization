@@ -19,7 +19,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private static final int TOTAL_PRODUCTS = 1_000_000;
+    private static final int TOTAL_PRODUCTS = 10_000_000;
     private static final int BATCH_SIZE = 5_000;
 
     private static final String[] CATEGORIES = {
@@ -76,8 +76,13 @@ public class DataSeeder implements CommandLineRunner {
         log.info("=== 상품 데이터 {}건 Seed 시작 ===", TOTAL_PRODUCTS);
         long startTime = System.currentTimeMillis();
 
-        // FULLTEXT 인덱스 임시 비활성화 (인덱싱 속도 향상)
-        jdbcTemplate.execute("ALTER TABLE product DISABLE KEYS");
+        // InnoDB에서 FULLTEXT 인덱스를 DROP하고 시딩 후 재생성 (DISABLE KEYS는 MyISAM 전용)
+        log.info("FULLTEXT 인덱스 DROP...");
+        try {
+            jdbcTemplate.execute("ALTER TABLE product DROP INDEX ft_name");
+        } catch (Exception e) {
+            log.info("FULLTEXT 인덱스가 없음 (이미 DROP됨)");
+        }
 
         Random random = new Random(42); // 재현 가능한 시드
         int inserted = 0;
@@ -103,9 +108,9 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // FULLTEXT 인덱스 재활성화
-        log.info("FULLTEXT 인덱스 재구축 중...");
-        jdbcTemplate.execute("ALTER TABLE product ENABLE KEYS");
+        // FULLTEXT 인덱스 재생성 (InnoDB)
+        log.info("FULLTEXT 인덱스 재생성 중... (시간 소요 예상)");
+        jdbcTemplate.execute("ALTER TABLE product ADD FULLTEXT INDEX ft_name (name) WITH PARSER ngram");
 
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("=== Seed 완료: {}건, {}초 ===", TOTAL_PRODUCTS, elapsed / 1000);
@@ -134,13 +139,14 @@ public class DataSeeder implements CommandLineRunner {
         return new Object[]{name, brand, category, price, salesCount, promoted, createdAt, updatedAt};
     }
 
+    private static final String[] ALL_TEMPLATES = Arrays.stream(PRODUCT_TEMPLATES)
+            .flatMap(Arrays::stream)
+            .toArray(String[]::new);
+
     private String generateProductName(Random random, String brand, String category) {
         // 50%: 템플릿 기반, 50%: 조합 생성
         if (random.nextDouble() < 0.5) {
-            String[] allTemplates = Arrays.stream(PRODUCT_TEMPLATES)
-                    .flatMap(Arrays::stream)
-                    .toArray(String[]::new);
-            String template = allTemplates[random.nextInt(allTemplates.length)];
+            String template = ALL_TEMPLATES[random.nextInt(ALL_TEMPLATES.length)];
             // 색상/사이즈 변형 추가
             return template + " " + randomVariant(random);
         }
