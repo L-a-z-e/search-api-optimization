@@ -42,6 +42,9 @@ dependencies {
     // Redis (autocomplete + cache)
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // Caffeine (L1 local cache)
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'

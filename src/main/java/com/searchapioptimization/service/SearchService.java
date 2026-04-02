@@ -42,4 +42,18 @@ public class SearchService {
                 .searchType("FULLTEXT")
                 .build();
     }
+
+    public SearchResponse searchByFulltextOptimized(String query, int page, int size) {
+        var pageable = PageRequest.of(page, size);
+        var result = productRepository.findByFulltextSlice(query, pageable);
+
+        return SearchResponse.builder()
+                .products(result.getContent().stream().map(ProductDto::from).toList())
+                .page(page)
+                .size(size)
+                .totalElements(-1)
+                .totalPages(-1)
+                .searchType("FULLTEXT_OPTIMIZED")
+                .build();
+    }
 }

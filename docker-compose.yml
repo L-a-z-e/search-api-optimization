@@ -19,7 +19,9 @@ services:
       - --long-query-time=0.5
       - --slow-query-log-file=/var/log/mysql/slow.log
       - --max-connections=200
-      - --innodb-buffer-pool-size=512M
+      - --innodb-buffer-pool-size=1G
+      - --ngram-token-size=2
+      - --innodb-ft-min-token-size=2
       - --server-id=1
       - --log-bin=mysql-bin
       - --binlog-format=ROW
@@ -121,6 +123,92 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: search-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: search-app-2
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - multi-instance
+
+  app-seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: search-app-seed
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,seed
+    depends_on:
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - seed
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: search-cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: search-mysqld-exporter
+    ports:
+      - "9104:9104"
+    command:
+      - "--mysqld.address=mysql:3306"
+      - "--mysqld.username=root"
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: "root1234"
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql-data:

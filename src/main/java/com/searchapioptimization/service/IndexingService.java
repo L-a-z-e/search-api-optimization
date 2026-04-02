@@ -11,9 +11,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -56,11 +53,48 @@ public class IndexingService {
         }
 
         long elapsed = System.currentTimeMillis() - startTime;
-        log.info("ES 인덱싱 완료: {}건, {}초", totalIndexed, elapsed / 1000);
+        log.info("ES 인덱싱 완료 (OFFSET): {}건, {}초", totalIndexed, elapsed / 1000);
 
         return Map.of(
                 "totalIndexed", totalIndexed,
-                "elapsedSeconds", elapsed / 1000
+                "elapsedSeconds", elapsed / 1000,
+                "method", "OFFSET"
+        );
+    }
+
+    public Map<String, Object> indexAllZeroOffset() {
+        long startTime = System.currentTimeMillis();
+        int totalIndexed = 0;
+        Long lastId = 0L;
+
+        while (true) {
+            List<Product> products = productRepository.findByIdGreaterThan(lastId, PageRequest.of(0, BATCH_SIZE));
+            if (products.isEmpty()) break;
+
+            List<IndexQuery> queries = products.stream()
+                    .map(p -> new IndexQueryBuilder()
+                            .withId(String.valueOf(p.getId()))
+                            .withObject(ProductDocument.from(p))
+                            .build()
+                    )
+                    .toList();
+
+            operations.bulkIndex(queries, operations.getIndexCoordinatesFor(ProductDocument.class));
+            totalIndexed += queries.size();
+            lastId = products.get(products.size() - 1).getId();
+
+            if (totalIndexed % 50000 == 0) {
+                log.info("ES 인덱싱 진행 (ZeroOffset): {}건", totalIndexed);
+            }
+        }
+
+        long elapsed = System.currentTimeMillis() - startTime;
+        log.info("ES 인덱싱 완료 (ZeroOffset): {}건, {}초", totalIndexed, elapsed / 1000);
+
+        return Map.of(
+                "totalIndexed", totalIndexed,
+                "elapsedSeconds", elapsed / 1000,
+                "method", "ZeroOffset"
         );
     }
 }

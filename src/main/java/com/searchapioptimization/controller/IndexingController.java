@@ -19,4 +19,9 @@ public class IndexingController {
     public Map<String, Object> indexAll() {
         return indexingService.indexAll();
     }
+
+    @PostMapping("/all/zero-offset")
+    public Map<String, Object> indexAllZeroOffset() {
+        return indexingService.indexAllZeroOffset();
+    }
 }
